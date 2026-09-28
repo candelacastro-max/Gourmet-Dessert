@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melería Estudiantil IRESM</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>🍭 Melería Estudiantil 🍰</h1>
+        <p>Los postres más ricos con forma de comida. ¡Ideal para tus fotos!</p>
+    </header>
+
+    <main>
+        <section class="carousel-section">
+            <button id="prevBtn" class="nav-btn">&lt;</button>
+            <div class="carousel-container" id="mainProductLink">
+                <img id="mainImage" src="" alt="Producto Principal">
+                <div class="price-tag" id="mainPrice"></div>
+            </div>
+            <button id="nextBtn" class="nav-btn">&gt;</button>
+        </section>
+
+        <section class="products-section">
+            <h2>Productos</h2>
+            <div class="product-grid" id="productGrid">
+                <!-- Grid llenado por JS -->
+            </div>
+        </section>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
