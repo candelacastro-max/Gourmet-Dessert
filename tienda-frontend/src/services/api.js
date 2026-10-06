@@ -2,7 +2,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // Función para obtener headers con autenticación leyendo access_token
 export function authHeaders() {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token') || localStorage.getItem('token');
   const headers = {
     'Content-Type': 'application/json',
   };
@@ -52,6 +52,32 @@ export async function getProductos({ page = 0, limit = 10, nombre = '' } = {}) {
   const params = new URLSearchParams({ page, limit });
   if (nombre) params.set('nombre', nombre);
   const res = await fetch(`${BASE_URL}/productos?${params}`);
+  return manejarRespuesta(res);
+}
+
+export async function crearProducto(productoData) {
+  const res = await fetch(`${BASE_URL}/productos`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(productoData),
+  });
+  return manejarRespuesta(res);
+}
+
+export async function actualizarProducto(id, productoData) {
+  const res = await fetch(`${BASE_URL}/productos/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(productoData),
+  });
+  return manejarRespuesta(res);
+}
+
+export async function eliminarProducto(id) {
+  const res = await fetch(`${BASE_URL}/productos/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
   return manejarRespuesta(res);
 }
 
@@ -122,3 +148,72 @@ export async function crearPedido(items) {
 
   return manejarRespuesta(res);
 }
+
+// Parte 2: Revocar pedido
+export async function revocarPedido(pedidoId) {
+  const res = await fetch(`${BASE_URL}/pedidos/${pedidoId}/revocacion`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  return manejarRespuesta(res);
+}
+
+// Parte 3: Obtener mis datos
+export async function getMisDatos() {
+  const res = await fetch(`${BASE_URL}/usuarios/me/datos`, {
+    method: 'GET',
+    headers: authHeaders(),
+  });
+  return manejarRespuesta(res);
+}
+
+// Parte 3: Subir imagen de producto
+export async function subirImagen(productoId, archivo) {
+  const fd = new FormData();
+  fd.append('archivo', archivo);
+
+  // Headers: SOLO Authorization (sin Content-Type para que el navegador ponga multipart/form-data con boundary)
+  const headers = {};
+  const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${BASE_URL}/productos/${productoId}/imagen`, {
+    method: 'POST',
+    headers,
+    body: fd,
+  });
+
+  if (res.ok) {
+    return await res.json();
+  }
+
+  // Traducción específica de errores solicitada:
+  // 413 (más de 2 MB), 415 (no es una imagen), 404 (el producto no existe), 403 (no sos administrador)
+  if (res.status === 413) {
+    throw new Error('El archivo supera el tamaño máximo permitido (más de 2 MB).');
+  }
+  if (res.status === 415) {
+    throw new Error('El archivo no es una imagen válida o el formato no está permitido.');
+  }
+  if (res.status === 404) {
+    throw new Error('El producto no existe.');
+  }
+  if (res.status === 403) {
+    throw new Error('No tenés permisos para realizar esta acción (se requiere rol administrador).');
+  }
+
+  return manejarRespuesta(res);
+}
+
+// Parte 4: Eliminar mi cuenta
+export async function eliminarMiCuenta() {
+  const res = await fetch(`${BASE_URL}/usuarios/me`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  return manejarRespuesta(res);
+}
+
+

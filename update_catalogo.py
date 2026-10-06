@@ -1,24 +1,17 @@
-import { useState, useEffect } from 'react';
+from write_frontend import write
+
+catalogo_code = """import { useState, useEffect } from 'react';
 import { getProductos } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import ProductCard from './ProductCard';
-import ProductoModal from './ProductoModal';
 
 const Catalogo = () => {
-  const { user } = useAuth();
-  const isAdmin = user?.rol === 'admin';
-
   const [productos, setProductos] = useState([]);
   const [page, setPage] = useState(0);
   const [busqueda, setBusqueda] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modal para crear / editar
-  const [modalAbierto, setModalAbierto] = useState(false);
-  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
-
-  const cargarProductos = () => {
+  useEffect(() => {
     setIsLoading(true);
     setError(null);
 
@@ -33,25 +26,7 @@ const Catalogo = () => {
       .finally(() => {
         setIsLoading(false);
       });
-  };
-
-  useEffect(() => {
-    cargarProductos();
   }, [page, busqueda]);
-
-  const handleNuevoProducto = () => {
-    setProductoSeleccionado(null);
-    setModalAbierto(true);
-  };
-
-  const handleEditarProducto = (prod) => {
-    setProductoSeleccionado(prod);
-    setModalAbierto(true);
-  };
-
-  const handleProductoEliminado = (idEliminado) => {
-    setProductos((prev) => prev.filter((p) => p.id !== idEliminado));
-  };
 
   return (
     <div className="catalogo-section">
@@ -82,16 +57,6 @@ const Catalogo = () => {
             </button>
           )}
         </div>
-
-        {isAdmin && (
-          <button
-            onClick={handleNuevoProducto}
-            className="btn-nuevo-producto"
-            title="Crear un nuevo producto en la tienda"
-          >
-            ➕ Nuevo Producto
-          </button>
-        )}
       </div>
 
       {isLoading && (
@@ -130,12 +95,7 @@ const Catalogo = () => {
           ) : (
             <div className="catalogo-grid">
               {productos.map((prod) => (
-                <ProductCard
-                  key={prod.id}
-                  producto={prod}
-                  onEditar={handleEditarProducto}
-                  onEliminado={handleProductoEliminado}
-                />
+                <ProductCard key={prod.id} producto={prod} />
               ))}
             </div>
           )}
@@ -159,17 +119,12 @@ const Catalogo = () => {
           </div>
         </>
       )}
-
-      {/* Modal para Crear / Editar Producto */}
-      {modalAbierto && (
-        <ProductoModal
-          producto={productoSeleccionado}
-          onClose={() => setModalAbierto(false)}
-          onGuardado={cargarProductos}
-        />
-      )}
     </div>
   );
 };
 
 export default Catalogo;
+"""
+
+write("components/Catalogo.jsx", catalogo_code)
+print("CATALOGO UPDATED")

@@ -14,3 +14,4 @@ class Producto(Base):
     cuotas_cantidad = Column(Integer, default=1)
     cuotas_valor = Column(Numeric(12, 2), nullable=True)
     garantia_meses = Column(Integer, default=0)
+    imagen_url = Column(String, nullable=True)

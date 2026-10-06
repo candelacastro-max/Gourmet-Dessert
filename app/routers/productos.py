@@ -5,9 +5,12 @@ from typing import List, Optional
 from decimal import Decimal
 
 from app.core.database import get_db
-# pyrefly: ignore [missing-import]
 from app.models.producto import Producto
 from app.dependencies import require_admin
+from fastapi import UploadFile, File
+import os
+import secrets
+from app.utils.archivos import parece_imagen
 
 router = APIRouter(prefix="/productos", tags=["productos"], redirect_slashes=False)
 
@@ -35,6 +38,7 @@ def listar_productos(
             "cuotas_cantidad": p.cuotas_cantidad or 1,
             "cuotas_valor": float(p.cuotas_valor) if p.cuotas_valor is not None else float(p.precio),
             "garantia_meses": p.garantia_meses or 0,
+            "imagen_url": p.imagen_url,
         }
         for p in productos
     ]
@@ -53,6 +57,7 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
         "cuotas_cantidad": producto.cuotas_cantidad or 1,
         "cuotas_valor": float(producto.cuotas_valor) if producto.cuotas_valor is not None else float(producto.precio),
         "garantia_meses": producto.garantia_meses or 0,
+        "imagen_url": producto.imagen_url,
     }
 
 
@@ -97,3 +102,38 @@ def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     db.delete(p)
     db.commit()
+
+# ── POST /productos/{id}/imagen — solo admin ─────────────────────────────────
+@router.post("/{producto_id}/imagen", dependencies=[Depends(require_admin)])
+async def subir_imagen_producto(producto_id: int, archivo: UploadFile = File(...), db: Session = Depends(get_db)):
+    producto = db.query(Producto).filter(Producto.id == producto_id).first()
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+        
+    ext = os.path.splitext(archivo.filename)[1].lower()
+    if ext not in [".jpg", ".jpeg", ".png", ".webp"]:
+        raise HTTPException(status_code=415, detail="Formato no permitido")
+        
+    contenido = await archivo.read()
+    if len(contenido) > 5 * 1024 * 1024: # 5MB limit
+        raise HTTPException(status_code=413, detail="Archivo demasiado grande")
+        
+    if not parece_imagen(contenido):
+        raise HTTPException(status_code=415, detail="El archivo no parece ser una imagen válida")
+        
+    nombre_archivo = f"{producto_id}-{secrets.token_hex(8)}{ext}"
+    ruta_guardado = os.path.join("uploads", "productos", nombre_archivo)
+    
+    with open(ruta_guardado, "wb") as f:
+        f.write(contenido)
+        
+    producto.imagen_url = f"/static/productos/{nombre_archivo}"
+    db.commit()
+    db.refresh(producto)
+    
+    return {
+        "id": producto.id,
+        "nombre": producto.nombre,
+        "precio": float(producto.precio),
+        "imagen_url": producto.imagen_url
+    }

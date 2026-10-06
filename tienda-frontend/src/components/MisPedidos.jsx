@@ -1,18 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMisPedidos } from '../services/api';
+import { getMisPedidos, revocarPedido } from '../services/api';
+
+const DIAS_PARA_REVOCAR = 10;
+function puedeRevocar(pedido) {
+  if (pedido.estado === "cancelado") return false;
+  const ms = Date.now() - new Date(pedido.creado_en);
+  return ms / 86400000 <= DIAS_PARA_REVOCAR;
+}
 
 const MisPedidos = () => {
   const { user } = useAuth();
   const [pedidos, setPedidos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estado para la revocación
+  const [revocandoId, setRevocandoId] = useState(null);
+  const [confirmarId, setConfirmarId] = useState(null);
+  const [codigosRevocacion, setCodigosRevocacion] = useState({});
+  const [errorRevocacion, setErrorRevocacion] = useState({});
 
-  useEffect(() => {
+  const cargarPedidos = () => {
     setCargando(true);
     setError(null);
-
     getMisPedidos()
       .then((data) => {
         setPedidos(Array.isArray(data) ? data : []);
@@ -24,7 +36,33 @@ const MisPedidos = () => {
       .finally(() => {
         setCargando(false);
       });
+  };
+
+  useEffect(() => {
+    cargarPedidos();
   }, []);
+
+  const handleRevocar = async (pedidoId) => {
+    if (confirmarId !== pedidoId) {
+      setConfirmarId(pedidoId);
+      return;
+    }
+    
+    // Doble clic: Ejecutar revocación
+    setRevocandoId(pedidoId);
+    setErrorRevocacion({ ...errorRevocacion, [pedidoId]: null });
+    
+    try {
+      const data = await revocarPedido(pedidoId);
+      setCodigosRevocacion({ ...codigosRevocacion, [pedidoId]: data.codigo });
+      cargarPedidos(); // Refrescar historial
+    } catch (err) {
+      setErrorRevocacion({ ...errorRevocacion, [pedidoId]: err.message });
+    } finally {
+      setRevocandoId(null);
+      setConfirmarId(null);
+    }
+  };
 
   return (
     <div className="pedidos-container">
@@ -80,8 +118,8 @@ const MisPedidos = () => {
                     {pedido.creado_en ? new Date(pedido.creado_en).toLocaleString('es-AR') : 'Reciente'}
                   </span>
                 </div>
-                <span className={`pedido-estado estado-${(pedido.estado || 'pendiente').toLowerCase()}`}>
-                  {pedido.estado || 'Pendiente'}
+                <span className={`pedido-estado estado-${(pedido.estado || 'comprado').toLowerCase()}`}>
+                  {pedido.estado === 'pendiente' ? 'Comprado' : (pedido.estado || 'Comprado')}
                 </span>
               </div>
 
@@ -110,9 +148,33 @@ const MisPedidos = () => {
                 </div>
               )}
 
-              <div className="pedido-card-footer">
-                <span>Total abonado:</span>
-                <strong>${Number(pedido.total || 0).toLocaleString('es-AR')}</strong>
+              <div className="pedido-card-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  {puedeRevocar(pedido) && (
+                    <button 
+                      className="btn-danger" 
+                      onClick={() => handleRevocar(pedido.id)}
+                      disabled={revocandoId === pedido.id}
+                      style={{ padding: '0.5rem 1rem', background: confirmarId === pedido.id ? 'var(--error-color)' : 'var(--text-secondary)' }}
+                    >
+                      {revocandoId === pedido.id ? 'Revocando...' : (confirmarId === pedido.id ? 'Confirmar revocación' : 'Arrepentirme de esta compra')}
+                    </button>
+                  )}
+                  {errorRevocacion[pedido.id] && (
+                    <p style={{ color: 'var(--error-color)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                      {errorRevocacion[pedido.id]}
+                    </p>
+                  )}
+                  {codigosRevocacion[pedido.id] && (
+                    <p role="status" style={{ color: 'var(--success-color)', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                      Código de revocación: {codigosRevocacion[pedido.id]}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <span>Total abonado: </span>
+                  <strong>${Number(pedido.total || 0).toLocaleString('es-AR')}</strong>
+                </div>
               </div>
             </div>
           ))}

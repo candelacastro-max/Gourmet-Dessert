@@ -63,7 +63,9 @@ productos_db: list[Producto] = [
         cuotas_valor=3666.66,
         garantia_meses=0,
         stock=25
-    )
+    ),
+
+
 ]
 
 @app.get("/productos", response_model=list[Producto], summary="Obtener todos los productos")

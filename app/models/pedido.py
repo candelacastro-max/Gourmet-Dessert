@@ -1,4 +1,6 @@
+# pyrefly: ignore [missing-import]
 from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime
+# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.core.database import Base
@@ -8,7 +10,7 @@ class Pedido(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    estado = Column(String, default="pendiente")
+    estado = Column(String, default="comprado")
     total = Column(Numeric(12, 2), default=0.0)
     creado_en = Column(DateTime, default=datetime.utcnow)
 
@@ -28,3 +30,17 @@ class ItemPedido(Base):
     # Relaciones
     pedido = relationship("Pedido", back_populates="items")
     producto = relationship("Producto")
+
+
+class SolicitudRevocacion(Base):
+    __tablename__ = "solicitudes_revocacion"
+
+    id = Column(Integer, primary_key=True, index=True)
+    codigo = Column(String, unique=True, index=True, nullable=False)
+    pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    creada_en = Column(DateTime, default=datetime.utcnow)
+
+    # Relaciones
+    pedido = relationship("Pedido")
+    usuario = relationship("Usuario")

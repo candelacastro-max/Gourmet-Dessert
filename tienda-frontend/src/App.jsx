@@ -10,6 +10,10 @@ import MisPedidos from './components/MisPedidos';
 import RutaProtegida from './components/RutaProtegida';
 import './App.css';
 
+import Arrepentimiento from './pages/Arrepentimiento';
+import Footer from './components/Footer';
+import MisDatos from './pages/MisDatos'; // Preparando para la parte 3
+
 const RootRedirect = () => {
   const { isAuthenticated, isGuest, isLoading } = useAuth();
 
@@ -45,9 +49,10 @@ const LoginPageWrapper = () => {
 
 const MainLayout = ({ children }) => {
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
-      <main className="main-content">{children}</main>
+      <main className="main-content" style={{ flex: 1 }}>{children}</main>
+      <Footer />
     </div>
   );
 };
@@ -79,6 +84,16 @@ function App() {
                 </MainLayout>
               }
             />
+            
+            {/* Página /arrepentimiento (pública, fuera de RutaProtegida) */}
+            <Route
+              path="/arrepentimiento"
+              element={
+                <MainLayout>
+                  <Arrepentimiento />
+                </MainLayout>
+              }
+            />
 
             {/* Ruta /mis-pedidos protegida con RutaProtegida */}
             <Route
@@ -87,6 +102,18 @@ function App() {
                 <RutaProtegida>
                   <MainLayout>
                     <MisPedidos />
+                  </MainLayout>
+                </RutaProtegida>
+              }
+            />
+            
+            {/* Ruta /mis-datos protegida */}
+            <Route
+              path="/mis-datos"
+              element={
+                <RutaProtegida>
+                  <MainLayout>
+                    <MisDatos />
                   </MainLayout>
                 </RutaProtegida>
               }

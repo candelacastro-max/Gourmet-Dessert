@@ -34,9 +34,14 @@ const Navbar = () => {
 
           {/* Enlace en el Navbar a /mis-pedidos visible solo con sesión iniciada */}
           {isAuthenticated && (
-            <Link to="/mis-pedidos" className="nav-link">
-              Mis Pedidos
-            </Link>
+            <>
+              <Link to="/mis-pedidos" className="nav-link">
+                Mis Pedidos
+              </Link>
+              <Link to="/mis-datos" className="nav-link">
+                Mis Datos
+              </Link>
+            </>
           )}
         </nav>
 
@@ -52,7 +57,9 @@ const Navbar = () => {
             <div className="user-profile">
               <div className="user-info">
                 <span className="user-name">Hola, {user?.nombre || user?.email || 'Usuario'}</span>
-                <span className="user-role-badge">{user?.rol || 'Cliente'}</span>
+                <span className={`user-role-badge ${user?.rol === 'admin' ? 'badge-admin' : ''}`}>
+                  {user?.rol === 'admin' ? '👑 Admin' : (user?.rol || 'Cliente')}
+                </span>
               </div>
               <button onClick={handleLogout} className="btn-logout" title="Cerrar sesión">
                 Cerrar Sesión

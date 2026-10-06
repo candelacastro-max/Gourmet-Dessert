@@ -46,3 +46,37 @@ def create_pedido_endpoint(
     current_user: Usuario = Depends(get_current_user)
 ):
     return crear_pedido(db=db, usuario=current_user, datos=datos)
+
+from app.services.pedido_service import revocar
+
+@router.post("/{pedido_id}/revocacion", status_code=status.HTTP_201_CREATED)
+def revocar_pedido_endpoint(
+    pedido_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    solicitud = revocar(db, current_user, pedido_id)
+    return {
+        "codigo": solicitud.codigo,
+        "pedido_id": solicitud.pedido_id,
+        "creada_en": solicitud.creada_en
+    }
+
+from pydantic import BaseModel
+
+class ArrepentimientoRequest(BaseModel):
+    pedido_id: int
+    email: str
+
+@router.post("/arrepentimiento", status_code=status.HTTP_201_CREATED)
+def arrepentimiento_publico(req: ArrepentimientoRequest, db: Session = Depends(get_db)):
+    pedido = db.query(Pedido).filter(Pedido.id == req.pedido_id).first()
+    if not pedido or pedido.usuario.email != req.email:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado o email incorrecto")
+        
+    solicitud = revocar(db, pedido.usuario, req.pedido_id)
+    return {
+        "codigo": solicitud.codigo,
+        "pedido_id": solicitud.pedido_id,
+        "creada_en": solicitud.creada_en
+    }

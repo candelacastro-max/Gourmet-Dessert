@@ -22,3 +22,8 @@ dist/
 dist-ssr/
 *.local
 
+# Uploads en vivo (Render los borra en cada deploy — no van al repo)
+uploads/
+
+# app/static/demo/ SÍ va al repo (imágenes de demo)
+!app/static/demo/

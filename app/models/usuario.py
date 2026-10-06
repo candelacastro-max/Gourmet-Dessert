@@ -12,4 +12,5 @@ class Usuario(Base):
     rol = Column(String, default="customer")           # "customer" | "admin"
     acepto_tratamiento = Column(Boolean, default=False)
     fecha_consentimiento = Column(DateTime, nullable=True)
-
+    activo = Column(Boolean, default=True)
+    fecha_baja = Column(DateTime, nullable=True)

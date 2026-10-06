@@ -68,6 +68,7 @@ def crear_productos():
             cuotas_valor=3666.67,
             garantia_meses=0
         ),
+       
     ]
 
     for p in productos:

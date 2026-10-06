@@ -27,7 +27,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exc
 
     usuario = db.query(Usuario).filter(Usuario.id == int(user_id)).first()
-    if not usuario:
+    if not usuario or usuario.activo is False:
         raise credentials_exc
     return usuario
 

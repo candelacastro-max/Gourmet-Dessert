@@ -13,7 +13,8 @@ import sys
 # Agregar el directorio raíz al path para poder importar la app
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from app.core.database import Base, SQLALCHEMY_DATABASE_URL
+from app.core.config import settings
+from app.core.database import Base
 from app.models.usuario import Usuario
 from app.models.producto import Producto
 from app.models.pedido import Pedido, ItemPedido
@@ -21,9 +22,7 @@ from app.models.pedido import Pedido, ItemPedido
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-
-# Overwrite the ini-file sqlalchemy.url path with the path given in the config of the main code
-config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
