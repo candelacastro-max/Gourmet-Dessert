@@ -11,15 +11,26 @@ const Catalogo = () => {
   const [productos, setProductos] = useState([]);
   const [page, setPage] = useState(0);
   const [busqueda, setBusqueda] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [cargando, setCargando] = useState(true);
+  const [lento, setLento] = useState(false);
   const [error, setError] = useState(null);
+
+  // Efecto para aviso si el backend en Render tarda en despertar (> 5s)
+  useEffect(() => {
+    if (!cargando) {
+      setLento(false);
+      return;
+    }
+    const t = setTimeout(() => setLento(true), 5000);
+    return () => clearTimeout(t);
+  }, [cargando]);
 
   // Modal para crear / editar
   const [modalAbierto, setModalAbierto] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
 
   const cargarProductos = () => {
-    setIsLoading(true);
+    setCargando(true);
     setError(null);
 
     getProductos({ page, limit: 8, nombre: busqueda })
@@ -31,7 +42,7 @@ const Catalogo = () => {
         setError('No se pudieron cargar los productos. Por favor, verifica que el backend esté encendido.');
       })
       .finally(() => {
-        setIsLoading(false);
+        setCargando(false);
       });
   };
 
@@ -94,14 +105,18 @@ const Catalogo = () => {
         )}
       </div>
 
-      {isLoading && (
+      {cargando && (
         <div className="loading-state">
           <div className="spinner"></div>
-          <p>Cargando delicias...</p>
+          <p role="status">
+            {lento
+              ? "Despertando el servidor, la primera visita puede tardar un minuto…"
+              : "Cargando productos…"}
+          </p>
         </div>
       )}
 
-      {!isLoading && error && (
+      {!cargando && error && (
         <div className="auth-alert error">
           <span>⚠️</span>
           <div>
@@ -110,7 +125,7 @@ const Catalogo = () => {
         </div>
       )}
 
-      {!isLoading && !error && (
+      {!cargando && !error && (
         <>
           {productos.length === 0 ? (
             <div className="empty-pedidos" style={{ margin: '40px 0' }}>
