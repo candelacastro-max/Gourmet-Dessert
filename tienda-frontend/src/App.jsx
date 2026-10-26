@@ -13,6 +13,7 @@ import './App.css';
 import Arrepentimiento from './pages/Arrepentimiento';
 import Footer from './components/Footer';
 import MisDatos from './pages/MisDatos'; // Preparando para la parte 3
+import ActualizacionDisponible from './components/ActualizacionDisponible';
 
 const RootRedirect = () => {
   const { isAuthenticated, isGuest, isLoading } = useAuth();
@@ -61,6 +62,7 @@ function App() {
   return (
     <AuthProvider>
       <CarritoProvider>
+        <ActualizacionDisponible />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<RootRedirect />} />

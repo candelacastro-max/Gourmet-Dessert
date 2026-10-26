@@ -2,16 +2,18 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCarrito } from '../context/CarritoContext';
 import { crearPedido } from '../services/api';
+import useConectado from '../hooks/useConectado';
 
 const Carrito = () => {
   const { items, quitar, vaciar, total } = useCarrito();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState(null);
+  const conectado = useConectado();
   const navigate = useNavigate();
 
   // Parte 2.4 y 2.5: confirmar() arranca con if (enviando) return, try/catch/finally y estado enviando
   const confirmar = async () => {
-    if (enviando) return;
+    if (enviando || !conectado) return;
     if (!items || items.length === 0) return;
 
     setEnviando(true);
@@ -129,13 +131,19 @@ const Carrito = () => {
               </strong>
             </div>
 
-            {/* Parte 2.5: Botón deshabilitado mientras enviando sea true, cambia texto a 'Confirmando…' */}
+            {!conectado && (
+              <p role="status" style={{ color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '10px 14px', borderRadius: '8px', fontSize: '14px', marginBottom: '14px' }}>
+                Podés mirar el catálogo, pero para comprar necesitás internet.
+              </p>
+            )}
+
+            {/* Parte 4: Botón deshabilitado si !conectado o enviando */}
             <button
               onClick={confirmar}
-              disabled={enviando || items.length === 0}
+              disabled={!conectado || enviando || items.length === 0}
               className="btn-checkout-primary btn-confirmar-compra"
             >
-              {enviando ? 'Confirmando…' : 'Confirmar compra'}
+              {enviando ? 'Confirmando…' : 'Comprar'}
             </button>
           </div>
         </div>
