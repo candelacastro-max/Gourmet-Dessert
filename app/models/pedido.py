@@ -39,6 +39,7 @@ class SolicitudRevocacion(Base):
     codigo = Column(String, unique=True, index=True, nullable=False)
     pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    motivo = Column(String, nullable=True)
     creada_en = Column(DateTime, default=datetime.utcnow)
 
     # Relaciones

@@ -18,7 +18,8 @@ const MisPedidos = () => {
   
   // Estado para la revocación
   const [revocandoId, setRevocandoId] = useState(null);
-  const [confirmarId, setConfirmarId] = useState(null);
+  const [modalPedido, setModalPedido] = useState(null); // Pedido a cancelar en modal
+  const [motivoCancelacion, setMotivoCancelacion] = useState('');
   const [codigosRevocacion, setCodigosRevocacion] = useState({});
   const [errorRevocacion, setErrorRevocacion] = useState({});
 
@@ -42,25 +43,32 @@ const MisPedidos = () => {
     cargarPedidos();
   }, []);
 
-  const handleRevocar = async (pedidoId) => {
-    if (confirmarId !== pedidoId) {
-      setConfirmarId(pedidoId);
-      return;
-    }
-    
-    // Doble clic: Ejecutar revocación
+  const abrirModalCancelacion = (pedido) => {
+    setModalPedido(pedido);
+    setMotivoCancelacion('');
+  };
+
+  const cerrarModalCancelacion = () => {
+    setModalPedido(null);
+    setMotivoCancelacion('');
+  };
+
+  const handleConfirmarCancelacion = async () => {
+    if (!modalPedido) return;
+    const pedidoId = modalPedido.id;
     setRevocandoId(pedidoId);
     setErrorRevocacion({ ...errorRevocacion, [pedidoId]: null });
     
     try {
-      const data = await revocarPedido(pedidoId);
+      const data = await revocarPedido(pedidoId, motivoCancelacion);
       setCodigosRevocacion({ ...codigosRevocacion, [pedidoId]: data.codigo });
+      cerrarModalCancelacion();
       cargarPedidos(); // Refrescar historial
     } catch (err) {
       setErrorRevocacion({ ...errorRevocacion, [pedidoId]: err.message });
+      cerrarModalCancelacion();
     } finally {
       setRevocandoId(null);
-      setConfirmarId(null);
     }
   };
 
@@ -153,11 +161,11 @@ const MisPedidos = () => {
                   {puedeRevocar(pedido) && (
                     <button 
                       className="btn-danger" 
-                      onClick={() => handleRevocar(pedido.id)}
+                      onClick={() => abrirModalCancelacion(pedido)}
                       disabled={revocandoId === pedido.id}
-                      style={{ padding: '0.5rem 1rem', background: confirmarId === pedido.id ? 'var(--error-color)' : 'var(--text-secondary)' }}
+                      style={{ padding: '0.5rem 1rem', background: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
                     >
-                      {revocandoId === pedido.id ? 'Revocando...' : (confirmarId === pedido.id ? 'Confirmar revocación' : 'Arrepentirme de esta compra')}
+                      {revocandoId === pedido.id ? 'Cancelando...' : 'Arrepentirme de esta compra'}
                     </button>
                   )}
                   {errorRevocacion[pedido.id] && (
@@ -178,6 +186,101 @@ const MisPedidos = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal para ingresar el motivo de cancelación */}
+      {modalPedido && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: 'var(--surface-color, #ffffff)',
+            color: 'var(--text-primary, #333333)',
+            borderRadius: '12px',
+            maxWidth: '480px',
+            width: '100%',
+            padding: '1.75rem',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Cancelar Pedido #{modalPedido.id}</h3>
+              <button 
+                onClick={cerrarModalCancelacion} 
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'inherit' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-secondary, #666)' }}>
+              ¿Estás seguro/a de que deseas cancelar este pedido? De acuerdo con la ley, se procesará la revocación inmediatamente.
+            </p>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                Motivo de la cancelación (opcional):
+              </label>
+              <textarea
+                value={motivoCancelacion}
+                onChange={(e) => setMotivoCancelacion(e.target.value)}
+                placeholder="Contanos brevemente por qué cancelás la compra (ej. me equivoqué de producto, demora en el envío, etc.)..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '1px solid #ccc',
+                  fontFamily: 'inherit',
+                  fontSize: '0.9rem',
+                  boxSizing: 'border-box',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={cerrarModalCancelacion}
+                disabled={revocandoId === modalPedido.id}
+                style={{ padding: '0.6rem 1.2rem', cursor: 'pointer' }}
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={handleConfirmarCancelacion}
+                disabled={revocandoId === modalPedido.id}
+                style={{
+                  padding: '0.6rem 1.2rem',
+                  backgroundColor: '#dc2626',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                {revocandoId === modalPedido.id ? 'Cancelando...' : 'Confirmar Cancelación'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

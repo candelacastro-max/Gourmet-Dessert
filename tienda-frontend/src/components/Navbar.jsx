@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCarrito } from '../context/CarritoContext';
+import NotificacionesAdmin from './NotificacionesAdmin';
 
 const Navbar = () => {
   const { user, isAuthenticated, isGuest, logout } = useAuth();
@@ -46,6 +47,11 @@ const Navbar = () => {
         </nav>
 
         <div className="nav-actions">
+          {/* Campanita de Notificaciones visible para administradoras/es */}
+          {isAuthenticated && user?.rol === 'admin' && (
+            <NotificacionesAdmin />
+          )}
+
           {/* Botón Carrito que lleva a /carrito */}
           <Link to="/carrito" className="nav-cart-btn" aria-label="Ver carrito">
             <span className="cart-icon">🛒</span>

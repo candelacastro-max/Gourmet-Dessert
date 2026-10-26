@@ -16,12 +16,22 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
+from fastapi.middleware.gzip import GZipMiddleware
+
 Path("uploads/productos").mkdir(parents=True, exist_ok=True)
+
+class StaticConCache(StaticFiles):
+    async def get_response(self, path, scope):
+        respuesta = await super().get_response(path, scope)
+        if respuesta.status_code == 200:
+            respuesta.headers["Cache-Control"] = "public, max-age=2592000, immutable"
+        return respuesta
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 app = FastAPI(title="E-commerce IRESM", description="API para el e-commerce del Instituto Remedios Escalada de San Martín")
 
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
@@ -44,8 +54,8 @@ app.include_router(usuarios_router)
 
 # Montamos las carpetas estáticas
 app.mount("/tienda", StaticFiles(directory="static", html=True), name="tienda")
-app.mount("/static", StaticFiles(directory="uploads"), name="static")
-app.mount("/demo", StaticFiles(directory="app/static/demo"), name="demo")
+app.mount("/static", StaticConCache(directory="uploads"), name="static")
+app.mount("/demo", StaticConCache(directory="app/static/demo"), name="demo")
 
 @app.get("/salud", tags=["Salud"])
 def salud(db: Session = Depends(get_db)):

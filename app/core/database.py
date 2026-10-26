@@ -10,9 +10,17 @@ from sqlalchemy.orm import sessionmaker
 # Intenta obtener de env, por defecto a SQLite
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ecommerce.db")
 
-# check_same_thread es necesario solo para SQLite
+# engine con pool_pre_ping y pool_recycle para conexiones remotas (ej: Neon)
+engine_kwargs = {}
+if "sqlite" in SQLALCHEMY_DATABASE_URL:
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["pool_recycle"] = 300
+
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {}
+    SQLALCHEMY_DATABASE_URL,
+    **engine_kwargs
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

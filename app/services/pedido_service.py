@@ -55,7 +55,7 @@ def generar_codigo() -> str:
     fecha = datetime.now(timezone.utc).strftime("%Y%m%d")
     return f"ARR-{fecha}-{secrets.token_hex(3).upper()}"
 
-def revocar(db: Session, usuario: Usuario, pedido_id: int):
+def revocar(db: Session, usuario: Usuario, pedido_id: int, motivo: str = None):
     pedido = db.query(Pedido).filter(Pedido.id == pedido_id).first()
     
     if not pedido or pedido.usuario_id != usuario.id:
@@ -90,7 +90,8 @@ def revocar(db: Session, usuario: Usuario, pedido_id: int):
         solicitud = SolicitudRevocacion(
             codigo=codigo,
             pedido_id=pedido.id,
-            usuario_id=usuario.id
+            usuario_id=usuario.id,
+            motivo=motivo
         )
         db.add(solicitud)
         

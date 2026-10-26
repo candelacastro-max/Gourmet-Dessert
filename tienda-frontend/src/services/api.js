@@ -150,9 +150,19 @@ export async function crearPedido(items) {
 }
 
 // Parte 2: Revocar pedido
-export async function revocarPedido(pedidoId) {
+export async function revocarPedido(pedidoId, motivo = '') {
   const res = await fetch(`${BASE_URL}/pedidos/${pedidoId}/revocacion`, {
     method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ motivo }),
+  });
+  return manejarRespuesta(res);
+}
+
+// Obtener notificaciones de cancelaciones (solo admin)
+export async function getNotificacionesCancelaciones() {
+  const res = await fetch(`${BASE_URL}/pedidos/admin/notificaciones-cancelaciones`, {
+    method: 'GET',
     headers: authHeaders(),
   });
   return manejarRespuesta(res);
