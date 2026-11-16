@@ -109,14 +109,22 @@ class ArrepentimientoRequest(BaseModel):
 
 @router.post("/arrepentimiento", status_code=status.HTTP_201_CREATED)
 def arrepentimiento_publico(req: ArrepentimientoRequest, db: Session = Depends(get_db)):
+    from app.services.pedido_service import generar_codigo
     pedido = db.query(Pedido).filter(Pedido.id == req.pedido_id).first()
-    if not pedido or pedido.usuario.email != req.email:
-        raise HTTPException(status_code=404, detail="Pedido no encontrado o email incorrecto")
+    # Respuesta uniforme (Clase 9): si no existe o el email no coincide, responde 201 igual con código
+    # pero NO cancela la compra ni devuelve stock
+    if not pedido or not pedido.usuario or pedido.usuario.email.strip().lower() != req.email.strip().lower():
+        return {
+            "codigo": generar_codigo(),
+            "pedido_id": req.pedido_id,
+            "motivo": req.motivo,
+            "mensaje": "Solicitud de arrepentimiento recibida",
+        }
         
     solicitud = revocar(db, pedido.usuario, req.pedido_id, motivo=req.motivo)
     return {
         "codigo": solicitud.codigo,
         "pedido_id": solicitud.pedido_id,
         "motivo": solicitud.motivo,
-        "creada_en": solicitud.creada_en
+        "mensaje": "Solicitud de arrepentimiento procesada",
     }
