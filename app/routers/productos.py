@@ -115,8 +115,8 @@ async def subir_imagen_producto(producto_id: int, archivo: UploadFile = File(...
         raise HTTPException(status_code=415, detail="Formato no permitido")
         
     contenido = await archivo.read()
-    if len(contenido) > 5 * 1024 * 1024: # 5MB limit
-        raise HTTPException(status_code=413, detail="Archivo demasiado grande")
+    if len(contenido) > 2 * 1024 * 1024: # 2MB limit (Clase 10 / BT6)
+        raise HTTPException(status_code=413, detail="Archivo demasiado grande (máximo 2 MB)")
         
     if not parece_imagen(contenido):
         raise HTTPException(status_code=415, detail="El archivo no parece ser una imagen válida")

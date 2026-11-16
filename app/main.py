@@ -157,6 +157,12 @@ app.include_router(pedidos_router)
 app.include_router(productos_router)
 app.include_router(usuarios_router)
 
+from app.routers.pedidos import arrepentimiento_publico, ArrepentimientoRequest
+
+@app.post("/arrepentimiento", status_code=201, tags=["arrepentimiento"])
+def arrepentimiento_raiz(req: ArrepentimientoRequest, db: Session = Depends(get_db)):
+    return arrepentimiento_publico(req, db)
+
 # Montamos las carpetas estáticas
 app.mount("/tienda", StaticFiles(directory="static", html=True), name="tienda")
 app.mount("/static", StaticConCache(directory="uploads"), name="static")

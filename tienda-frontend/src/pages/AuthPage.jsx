@@ -13,7 +13,7 @@ const AuthPage = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    acepto_tratamiento: true,
+    acepto_tratamiento: false,
   });
 
   const [error, setError] = useState(null);
@@ -190,7 +190,7 @@ const AuthPage = () => {
               </label>
             </div>
 
-            <button type="submit" className="btn-auth-primary" disabled={loading}>
+            <button type="submit" className="btn-auth-primary" disabled={loading || !formData.acepto_tratamiento}>
               {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </button>
           </form>
